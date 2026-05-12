@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Color Formatter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            border-color: #555;
+        }
+        #preview {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #1e1e1e; /* Minecraft chat background is dark */
+            min-height: 50px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 18px;
+            line-height: 1.4;
+        }
+        .label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .obfuscated {
+            animation: obfuscate 0.1s infinite;
+        }
+        @keyframes obfuscate {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <label class="label" for="input">Type your Minecraft text (e.g., &4&lHello &eWorld):</label>
+    <textarea id="input" placeholder="Enter text with & color codes..."></textarea>
+
+    <label class="label" style="margin-top: 30px;">Preview:</label>
+    <div id="preview"></div>
+</div>
+
+<script>
+    const colorMap = {
+        '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+        '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+        '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+        'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+    };
+
+    const formatMap = {
+        'l': 'font-weight: bold;',
+        'm': 'text-decoration: line-through;',
+        'n': 'text-decoration: underline;',
+        'o': 'font-style: italic;',
+        'k': 'obfuscated'
+    };
+
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+
+    input.addEventListener('input', () => {
+        let text = input.value;
+        let html = '';
+        let currentStyles = { color: '#FFFFFF', bold: false, italic: false, underline: false, strike: false, obfuscated: false };
+        
+        let parts = text.split(/&([0-9a-fk-or])/g);
+        
+        html += '<span>'; // Initial span
+        
+        for (let i = 0; i < parts.length; i++) {
+            if (i % 2 === 1) {
+                let code = parts[i].toLowerCase();
+                
+                if (colorMap[code]) {
+                    // Colors reset formatting in Minecraft
+                    currentStyles = { color: colorMap[code], bold: false, italic: false, underline: false, strike: false, obfuscated: false };
+                } else if (code === 'r') {
+                    currentStyles = { color: '#FFFFFF', bold: false, italic: false, underline: false, strike: false, obfuscated: false };
+                } else if (code === 'l') currentStyles.bold = true;
+                else if (code === 'm') currentStyles.strike = true;
+                else if (code === 'n') currentStyles.underline = true;
+                else if (code === 'o') currentStyles.italic = true;
+                else if (code === 'k') currentStyles.obfuscated = true;
+                
+            } else {
+                let styleStr = `color: ${currentStyles.color};`;
+                if (currentStyles.bold) styleStr += 'font-weight: bold;';
+                if (currentStyles.italic) styleStr += 'font-style: italic;';
+                
+                let decorations = [];
+                if (currentStyles.underline) decorations.push('underline');
+                if (currentStyles.strike) decorations.push('line-through');
+                if (decorations.length > 0) styleStr += `text-decoration: ${decorations.join(' ')};`;
+                
+                let className = currentStyles.obfuscated ? 'class="obfuscated"' : '';
+                let content = parts[i];
+                
+                if (currentStyles.obfuscated) {
+                    // Simulate obfuscated text by scrambling letters
+                    content = content.replace(/\S/g, () => String.fromCharCode(33 + Math.random() * 94));
+                }
+
+                html += `</span><span style="${styleStr}" ${className}>${content}`;
+            }
+        }
+        
+        html += '</span>';
+        preview.innerHTML = html;
+    });
+</script>
+
+</body>
+</html>
