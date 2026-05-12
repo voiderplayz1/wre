@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Color Formatter</title>
+    <title>Minecraft Color Formatter v2</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -38,7 +37,7 @@
             padding: 20px;
             border: 1px solid #eee;
             border-radius: 8px;
-            background-color: #1e1e1e; /* Minecraft chat background is dark */
+            background-color: #1e1e1e;
             min-height: 50px;
             word-wrap: break-word;
             white-space: pre-wrap;
@@ -51,20 +50,12 @@
             margin-bottom: 10px;
             display: block;
         }
-        .obfuscated {
-            animation: obfuscate 0.1s infinite;
-        }
-        @keyframes obfuscate {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <label class="label" for="input">Type your Minecraft text (e.g., &4&lHello &eWorld):</label>
+    <label class="label" for="input">Type your Minecraft text (e.g., &4&lHello &kMagic):</label>
     <textarea id="input" placeholder="Enter text with & color codes..."></textarea>
 
     <label class="label" style="margin-top: 30px;">Preview:</label>
@@ -79,32 +70,20 @@
         'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
     };
 
-    const formatMap = {
-        'l': 'font-weight: bold;',
-        'm': 'text-decoration: line-through;',
-        'n': 'text-decoration: underline;',
-        'o': 'font-style: italic;',
-        'k': 'obfuscated'
-    };
-
     const input = document.getElementById('input');
     const preview = document.getElementById('preview');
 
-    input.addEventListener('input', () => {
+    function updatePreview() {
         let text = input.value;
         let html = '';
         let currentStyles = { color: '#FFFFFF', bold: false, italic: false, underline: false, strike: false, obfuscated: false };
         
         let parts = text.split(/&([0-9a-fk-or])/g);
         
-        html += '<span>'; // Initial span
-        
         for (let i = 0; i < parts.length; i++) {
             if (i % 2 === 1) {
                 let code = parts[i].toLowerCase();
-                
                 if (colorMap[code]) {
-                    // Colors reset formatting in Minecraft
                     currentStyles = { color: colorMap[code], bold: false, italic: false, underline: false, strike: false, obfuscated: false };
                 } else if (code === 'r') {
                     currentStyles = { color: '#FFFFFF', bold: false, italic: false, underline: false, strike: false, obfuscated: false };
@@ -113,7 +92,6 @@
                 else if (code === 'n') currentStyles.underline = true;
                 else if (code === 'o') currentStyles.italic = true;
                 else if (code === 'k') currentStyles.obfuscated = true;
-                
             } else {
                 let styleStr = `color: ${currentStyles.color};`;
                 if (currentStyles.bold) styleStr += 'font-weight: bold;';
@@ -124,21 +102,30 @@
                 if (currentStyles.strike) decorations.push('line-through');
                 if (decorations.length > 0) styleStr += `text-decoration: ${decorations.join(' ')};`;
                 
-                let className = currentStyles.obfuscated ? 'class="obfuscated"' : '';
                 let content = parts[i];
-                
                 if (currentStyles.obfuscated) {
-                    // Simulate obfuscated text by scrambling letters
-                    content = content.replace(/\S/g, () => String.fromCharCode(33 + Math.random() * 94));
+                    content = content.split('').map(char => {
+                        if (char === ' ' || char === '\n') return char;
+                        // Use a range of random characters similar to Minecraft obfuscation
+                        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+                        return chars.charAt(Math.floor(Math.random() * chars.length));
+                    }).join('');
                 }
 
-                html += `</span><span style="${styleStr}" ${className}>${content}`;
+                html += `<span style="${styleStr}">${content}</span>`;
             }
         }
-        
-        html += '</span>';
         preview.innerHTML = html;
-    });
+    }
+
+    input.addEventListener('input', updatePreview);
+
+    // This makes the &k text scramble continuously
+    setInterval(() => {
+        if (input.value.includes('&k')) {
+            updatePreview();
+        }
+    }, 50);
 </script>
 
 </body>
